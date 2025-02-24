@@ -18,6 +18,35 @@
             max-width: 600px;
             margin: 0 auto;
         }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .calculator-container {
+                padding: 15px;
+                margin: 0;
+            }
+            .formula-box {
+                font-size: 0.85em;
+            }
+            .result-box p {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+            .result-box strong {
+                font-size: 1.2em;
+                display: block;
+                width: 100%;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+            .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
         .result-box {
             background-color: #f8f9fa;
             padding: 20px;
@@ -61,7 +90,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container p-0">
         <div class="calculator-container">
             <h2 class="text-center mb-4">基金补仓计算器</h2>
             
@@ -188,23 +217,23 @@
             resultContent.innerHTML = `
                 <div class="result-section">
                     <h5>📊 当前状况</h5>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>当前总投入</span>
                         <strong>￥${formatNumber(currentTotalInvestment)}</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>当前市值</span>
                         <strong>￥${formatNumber(currentMarketValue)}</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>当前亏损</span>
                         <strong class="negative-value">￥${formatNumber(-currentLoss)}</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>当前收益率</span>
                         <strong class="${currentReturnRate >= 0 ? '' : 'negative-value'}">${formatPercent(currentReturnRate)}</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>回本需涨幅</span>
                         <strong>${formatPercent(currentRequiredReturn)}</strong>
                     </p>
@@ -212,23 +241,23 @@
                 
                 <div class="result-section">
                     <h5>💰 补仓方案</h5>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>补仓份额</span>
                         <strong>${formatNumber(sharesToBuy)} 份</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>补仓金额</span>
                         <strong>￥${formatNumber(planInvestment)}</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>补仓后总份额</span>
                         <strong>${formatNumber(totalShares)} 份</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>补仓后新均价</span>
                         <strong>￥${formatNumber(newAveragePrice)}</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>补仓后回本所需涨幅</span>
                         <strong>${formatPercent(newRequiredReturn)}</strong>
                     </p>
@@ -236,15 +265,15 @@
                 
                 <div class="result-section">
                     <h5>📈 预期收益（${formatPercent(expectedReturn * 100)}涨幅）</h5>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>预期净值</span>
                         <strong>￥${formatNumber(expectedPrice)}</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>预期市值</span>
                         <strong>￥${formatNumber(expectedValue)}</strong>
                     </p>
-                    <p>
+                    <p class="d-flex flex-wrap justify-content-between align-items-center">
                         <span>预期盈利</span>
                         <strong class="${expectedProfit >= 0 ? '' : 'negative-value'}">￥${formatNumber(expectedProfit)}</strong>
                     </p>
