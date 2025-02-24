@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基金补仓计算器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .calculator-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .result-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .result-box h5 {
+            color: #0d6efd;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .result-box p {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .result-box p:hover {
+            background-color: #e9ecef;
+        }
+        .result-box strong {
+            color: #198754;
+            font-size: 1.1em;
+        }
+        .negative-value {
+            color: #dc3545 !important;
+        }
+        .result-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .result-section:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="calculator-container">
+            <h2 class="text-center mb-4">基金补仓计算器</h2>
+            
+            <div class="formula-box">
+                <h5>📊 计算原理说明</h5>
+                <p>补仓计算基于以下原理：</p>
+                <ol>
+                    <li>当前总投入 = 当前持仓份额 × 持仓均价</li>
+                    <li>当前市值 = 当前持仓份额 × 当前净值</li>
+                    <li>亏损金额 = 当前市值 - 当前总投入</li>
+                    <li>补仓计算：假设补仓X份，则有：<br>
+                        (当前持仓份额 × 持仓均价 + X × 当前净值) ÷ (当前持仓份额 + X) = 目标均价</li>
+                    <li>解方程得到需要补仓的份额X</li>
+                </ol>
+                <p>注意事项：</p>
+                <ul>
+                    <li>目标均价通常设置为持仓均价（即回本目标）或低于持仓均价（部分回本）</li>
+                    <li>补仓时当前净值应低于持仓均价，否则补仓会增加成本</li>
+                    <li>计算结果仅供参考，实际投资请结合市场情况和个人判断</li>
+                </ul>
+            </div>
+            
+            <form id="calculatorForm">
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button" class="btn btn-outline-info btn-sm" id="fillExample">
+                        📝 填充示例数据
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <label for="currentPrice" class="form-label">当前净值</label>
+                    <input type="number" class="form-control" id="currentPrice" step="0.0001" required>
+                </div>
+                <div class="mb-3">
+                    <label for="averagePrice" class="form-label">持仓均价</label>
+                    <input type="number" class="form-control" id="averagePrice" step="0.0001" required>
+                </div>
+                <div class="mb-3">
+                    <label for="currentShares" class="form-label">当前持仓份额</label>
+                    <input type="number" class="form-control" id="currentShares" step="0.01" required>
+                </div>
+                <div class="mb-3">
+                    <label for="planInvestment" class="form-label">计划补仓金额</label>
+                    <input type="number" class="form-control" id="planInvestment" step="0.01" required>
+                </div>
+                <div class="mb-3">
+                    <label for="expectedReturn" class="form-label">预期涨幅(%)</label>
+                    <input type="number" class="form-control" id="expectedReturn" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">计算补仓方案</button>
+            </form>
+            
+            <div class="result-box mt-4" id="result" style="display: none;">
+                <h4 class="mb-3">补仓建议</h4>
+                <div id="resultContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加示例数据填充功能
+        document.getElementById('fillExample').addEventListener('click', function() {
+            document.getElementById('currentPrice').value = '0.8500';
+            document.getElementById('averagePrice').value = '1.0000';
+            document.getElementById('currentShares').value = '10000';
+            document.getElementById('planInvestment').value = '5000';
+            document.getElementById('expectedReturn').value = '20';
+            
+            // 触发计算
+            document.getElementById('calculatorForm').dispatchEvent(new Event('submit'));
+        });
+
+        document.getElementById('calculatorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 获取输入值
+            const currentPrice = parseFloat(document.getElementById('currentPrice').value);
+            const averagePrice = parseFloat(document.getElementById('averagePrice').value);
+            const currentShares = parseFloat(document.getElementById('currentShares').value);
+            const planInvestment = parseFloat(document.getElementById('planInvestment').value);
+            const expectedReturn = parseFloat(document.getElementById('expectedReturn').value) / 100;
+            
+            // 计算当前状态
+            const currentTotalInvestment = currentShares * averagePrice;
+            const currentMarketValue = currentShares * currentPrice;
+            const currentLoss = currentMarketValue - currentTotalInvestment;
+            const currentReturnRate = (currentMarketValue / currentTotalInvestment - 1) * 100;
+            
+            // 计算补仓数据
+            const sharesToBuy = planInvestment / currentPrice;
+            const totalShares = currentShares + sharesToBuy;
+            const newAveragePrice = (currentTotalInvestment + planInvestment) / totalShares;
+            
+            // 计算涨幅需求
+            const currentRequiredReturn = ((averagePrice - currentPrice) / currentPrice) * 100;
+            const newRequiredReturn = ((newAveragePrice - currentPrice) / currentPrice) * 100;
+            
+            // 预期价格和收益
+            const expectedPrice = currentPrice * (1 + expectedReturn);
+            const expectedValue = totalShares * expectedPrice;
+            const expectedProfit = expectedValue - (currentTotalInvestment + planInvestment);
+            
+            // 显示结果
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            // 格式化数字显示
+            const formatNumber = (num) => {
+                return new Intl.NumberFormat('zh-CN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(num);
+            };
+            
+            const formatPercent = (num) => {
+                // 直接格式化数字，不除以100
+                const formattedNum = num.toLocaleString('zh-CN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                    minimumIntegerDigits: 1
+                });
+                return formattedNum + '%';
+            };
+            
+            resultContent.innerHTML = `
+                <div class="result-section">
+                    <h5>📊 当前状况</h5>
+                    <p>
+                        <span>当前总投入</span>
+                        <strong>￥${formatNumber(currentTotalInvestment)}</strong>
+                    </p>
+                    <p>
+                        <span>当前市值</span>
+                        <strong>￥${formatNumber(currentMarketValue)}</strong>
+                    </p>
+                    <p>
+                        <span>当前亏损</span>
+                        <strong class="negative-value">￥${formatNumber(-currentLoss)}</strong>
+                    </p>
+                    <p>
+                        <span>当前收益率</span>
+                        <strong class="${currentReturnRate >= 0 ? '' : 'negative-value'}">${formatPercent(currentReturnRate)}</strong>
+                    </p>
+                    <p>
+                        <span>回本需涨幅</span>
+                        <strong>${formatPercent(currentRequiredReturn)}</strong>
+                    </p>
+                </div>
+                
+                <div class="result-section">
+                    <h5>💰 补仓方案</h5>
+                    <p>
+                        <span>补仓份额</span>
+                        <strong>${formatNumber(sharesToBuy)} 份</strong>
+                    </p>
+                    <p>
+                        <span>补仓金额</span>
+                        <strong>￥${formatNumber(planInvestment)}</strong>
+                    </p>
+                    <p>
+                        <span>补仓后总份额</span>
+                        <strong>${formatNumber(totalShares)} 份</strong>
+                    </p>
+                    <p>
+                        <span>补仓后新均价</span>
+                        <strong>￥${formatNumber(newAveragePrice)}</strong>
+                    </p>
+                    <p>
+                        <span>补仓后回本所需涨幅</span>
+                        <strong>${formatPercent(newRequiredReturn)}</strong>
+                    </p>
+                </div>
+                
+                <div class="result-section">
+                    <h5>📈 预期收益（${formatPercent(expectedReturn * 100)}涨幅）</h5>
+                    <p>
+                        <span>预期净值</span>
+                        <strong>￥${formatNumber(expectedPrice)}</strong>
+                    </p>
+                    <p>
+                        <span>预期市值</span>
+                        <strong>￥${formatNumber(expectedValue)}</strong>
+                    </p>
+                    <p>
+                        <span>预期盈利</span>
+                        <strong class="${expectedProfit >= 0 ? '' : 'negative-value'}">￥${formatNumber(expectedProfit)}</strong>
+                    </p>
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
